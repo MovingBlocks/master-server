@@ -1,30 +1,30 @@
-plugins {
-    id "org.owasp.dependencycheck" version "7.1.0.1"
-    id 'java'
-    id 'application'
-    id 'eclipse'
-    id 'pmd'
-    id 'checkstyle'
-    id 'com.github.spotbugs' version '4.7.1'
 
-    id "com.diffplug.eclipse.apt" version "3.22.0"
-    id "com.github.johnrengelman.shadow" version "6.0.0"
+plugins {
+    id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("io.micronaut.application") version "3.7.10"
+    id("org.sonarqube") version "4.4.1.3373"
+
+    id 'com.google.cloud.tools.jib' version '3.4.0'
 }
 
 apply from: 'config/gradle/versioning.gradle'
 
 mainClassName = "org.terasology.Application"
 applicationName = "meta-server"
-
 group = 'org.terasology.web'
+
+ext {
+    //imagePath = "gcr.io/${gcpProjectName}/${applicationName}:${version}"                                  // GCR
+    //imagePath = "docker.terasology.io/repository/docker-nexus/${applicationName}:${version}"              // Nexus
+    imagePath = "us-east1-docker.pkg.dev/${gcpProjectName}/test-docker/${applicationName}:${version}"       // GAR
+}
 
 repositories {
     mavenCentral()
 
     maven {
         name "Terasology Artifactory"
-        url "http://artifactory.terasology.io/artifactory/virtual-repo-live"
-        allowInsecureProtocol true
+        url "https://artifactory.terasology.io/artifactory/virtual-repo-live"
     }
 }
 
@@ -33,32 +33,22 @@ java {
     targetCompatibility = JavaVersion.toVersion('11')
 }
 
-def codeMetricsDir = "${buildDir}/codeMetrics"
-
-configurations {
-    codeMetrics
-    // for dependencies that are needed for development only
-    developmentOnly
-}
-
 dependencies {
-    annotationProcessor(platform("io.micronaut:micronaut-bom:$micronautVersion"))
-    annotationProcessor("io.micronaut:micronaut-inject-java")
-    annotationProcessor("io.micronaut:micronaut-validation")
-    implementation(platform("io.micronaut:micronaut-bom:$micronautVersion"))
-    implementation("io.micronaut:micronaut-inject")
-    implementation("io.micronaut:micronaut-validation")
-    implementation("io.micronaut:micronaut-runtime")
-    implementation("javax.annotation:javax.annotation-api")
-    implementation("io.micronaut:micronaut-http-server-netty")
-    implementation("io.micronaut.views:micronaut-views-freemarker")
+    annotationProcessor("io.micronaut:micronaut-http-validation")
     implementation("io.micronaut:micronaut-http-client")
+    implementation("jakarta.annotation:jakarta.annotation-api")
+    implementation("io.micronaut:micronaut-inject:3.10.1")
+    implementation("io.micronaut.views:micronaut-views-freemarker")
+
+    // logging
+    testImplementation 'org.slf4j:slf4j-api:1.7.30'
+    runtimeOnly("ch.qos.logback:logback-classic")
+
+    // Database
     implementation("io.micronaut.sql:micronaut-jdbc-hikari")
     implementation("io.micronaut.sql:micronaut-jooq")
-    runtimeOnly("ch.qos.logback:logback-classic")
+    implementation 'com.h2database:h2'
     runtimeOnly("org.postgresql:postgresql")
-
-    implementation 'org.slf4j:slf4j-api:1.7.30'
 
     // For `@ThreadSafe`
     implementation 'javax.annotation:javax.annotation-api:1.3.2'
@@ -67,103 +57,94 @@ dependencies {
     // Module working
     implementation 'com.google.code.gson:gson:2.4'
     implementation 'org.terasology:gestalt-module:4.1.2'
-
     implementation 'com.google.guava:guava:18.0'
-
-    //// Tests
-    testAnnotationProcessor(enforcedPlatform("io.micronaut:micronaut-bom:$micronautVersion"))
-    testAnnotationProcessor("io.micronaut:micronaut-inject-java")
-    testImplementation(enforcedPlatform("io.micronaut:micronaut-bom:$micronautVersion"))
-
-    implementation 'org.jooq:jooq:3.14.16'
-    implementation 'org.mariadb.jdbc:mariadb-java-client:3.1.0'
-    
-    //Junit 5
-    testImplementation("org.junit.jupiter:junit-jupiter-api")
-    testImplementation("org.junit.jupiter:junit-jupiter-params")
-    testImplementation("io.micronaut.test:micronaut-test-junit5")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
-
-    // html validation
-    testImplementation 'org.jsoup:jsoup:1.15.2'
-    testImplementation 'com.jcabi:jcabi-w3c:1.4.0'
-    testImplementation 'com.jcabi:jcabi-matchers:1.5.3'
-
-    // loggin and database
-    testImplementation 'org.slf4j:slf4j-api:1.7.30'
-    implementation 'com.h2database:h2'
-
-    // Code analyzers
-    pmd 'net.sourceforge.pmd:pmd-core:6.48.0'
-    pmd 'net.sourceforge.pmd:pmd-java:6.48.0'
-    codeMetrics group: 'org.terasology.config', name: 'codemetrics', version: '1.3.2', ext: 'zip'
 }
 
-test.classpath += configurations.developmentOnly
-
-task unpackConfig(type: Sync, dependsOn: configurations.codeMetrics) {
-    from zipTree(configurations.codeMetrics.singleFile)
-    into codeMetricsDir
-
-}
-tasks.compileJava.dependsOn unpackConfig
-
-checkstyle {
-    ignoreFailures = true
-    config = resources.text.fromFile("${codeMetricsDir}/checkstyle/checkstyle.xml")
-    configProperties.samedir = "${codeMetricsDir}/checkstyle"
-}
-
-pmd {
-    ignoreFailures = true
-    ruleSetConfig = resources.text.fromFile("${codeMetricsDir}/pmd/pmd.xml")
-    ruleSets = []
-}
-
-spotbugs {
-    ignoreFailures = true
-    effort = 'max'
-    reportLevel = 'medium'
-    excludeFilter = resources.text.fromFile("${codeMetricsDir}/findbugs/findbugs-exclude.xml").asFile()
-}
-
-
-tasks.withType(JavaCompile) {
-    options.encoding = "UTF-8"
-    options.compilerArgs.addAll([
-            '-parameters',
-            // enables incremental compilation
-            '-Amicronaut.processing.incremental=true',
-            '-Amicronaut.processing.annotations=org.terasology.*',
-            "-Amicronaut.processing.group=$project.group",
-            "-Amicronaut.processing.module=$project.name",
-    ])
+application {
+    mainClass.set("org.terasology.Application")
 }
 
 shadowJar {
     mergeServiceFiles()
 }
 
-tasks.withType(JavaExec) {
-    classpath += configurations.developmentOnly
-    jvmArgs('-XX:TieredStopAtLevel=1', '-Dcom.sun.management.jmxremote')
-    if (gradle.startParameter.continuous) {
-        systemProperties(
-                'micronaut.io.watch.restart':'true',
-                'micronaut.io.watch.enabled':'true',
-                "micronaut.io.watch.paths":"src/main"
-        )
+graalvmNative.toolchainDetection = false
+micronaut {
+    runtime("netty")
+    testRuntime("junit5")
+    processing {
+        incremental(true)
+        annotations("org.terasology.*")
     }
 }
 
+task runDocker(type: Exec) {
+    dependsOn 'jibDockerBuild'
 
-test {
-    useJUnitPlatform()
-    // ignoreFailures: Specifies whether the build should break when the verifications performed by this task fail.
-    ignoreFailures = true
+    // GCP variant that'll use an image published (and public) on the Google Container Registry
+    //commandLine 'docker', 'run', '--env', 'MICRONAUT_ENVIRONMENTS=dev', '-p', '8080:8080', "gcr.io/$gcpProjectName/$applicationName:$version"
 
-    // showStandardStreams: makes the standard streams (err and out) visible at console when running tests
-    testLogging.showStandardStreams = true
+    // Local variant
+    commandLine 'docker', 'run', '--env', 'MICRONAUT_ENVIRONMENTS=dev', '-p', '8080:8080', "$applicationName:$version"
+}
+
+// If needed - can adjust the origin image and set a target location for automated publishing
+jib {
+    //from.image = 'adoptopenjdk:11-jre-hotspot'
+
+    // This needs auth via `gcloud auth configure-docker` locally or something else in CI. Hardcoded GCP project name.
+    //to.image = "$imagePath"
+    // `./gradlew jib` will then both build and publish the image
+
+    // Alternatives with auth
+    to {
+        image = "$imagePath"
+
+        // GAR auth - assumes the service account key is in a secret file credential from Jenkins
+        auth {
+            username = "_json_key"
+            password = project.provider({ -> // This Gradle file may be executed in a context where Jenkins credentials are not available yet
+                def garKeyFile = System.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+                if (garKeyFile == null) {
+                    logger.warn("Warning: GOOGLE_APPLICATION_CREDENTIALS env var is not set. Skipping Jib authentication.")
+                    return ""
+                }
+
+                def keyFile = new File(garKeyFile as String)
+                if (!keyFile.exists()) {
+                    logger.warn("Warning: Service account key file does not exist: ${keyFile.absolutePath}. Skipping Jib authentication.")
+                    return ""
+                }
+
+                return keyFile.text
+            })
+        }
+
+        /* Nexus way
+        auth {
+            username = System.getenv('NEXUS_USERNAME') ?: 'unset'
+            password = System.getenv('NEXUS_PASSWORD') ?: 'unset'
+        }
+        */
+    }
+    // Interesting part could be templates with _dynamic_ pick of container registry
+}
+
+// Does text manipulation to prepare k8s YAML files for deployment - should happen in a CD style context with no Git updates
+task prepareCD(type: Exec) {
+    //NOTE: On MacOS you need -i '' 's| ... specifically, may have to remove the '' for Linux
+    commandLine 'bash', '-c', """
+        sed -i 's|APP_URL|${appUrl}|g' k8s/ingress.yaml &&
+        sed -i 's|IMAGE_PATH|${imagePath}|g' k8s/statefulset.yaml
+    """
+}
+
+sonar {
+    properties {
+        property "sonar.projectKey", "com.example.${applicationName}"
+        property "sonar.host.url", "https://sonarqube.terasology.io/"
+        property "sonar.token", System.getenv('SONAR_TOKEN')
+    }
 }
 
 distributions {
