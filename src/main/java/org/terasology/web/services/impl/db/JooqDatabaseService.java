@@ -149,20 +149,21 @@ public final class JooqDatabaseService implements DatabaseService {
                     .set(DSL.field(DSL.name("owner")), owner)
                     .set(DSL.field(DSL.name("active")), active);
 
-            try {
-                GeoLocation geoLoc = geoService.resolve(address);
-                String country = geoLoc.getCountry();
-                String stateProv = geoLoc.getStateOrProvince();
-                String city = geoLoc.getCity();
+            //try {
+            // TODO: Disabled as either the API changed or our key expired (db-ip is a paid service now)
+            //GeoLocation geoLoc = geoService.resolve(address);
+            String country = "placeholder"; //geoLoc.getCountry();
+            String stateProv = "placeholder"; //geoLoc.getStateOrProvince();
+            String city = "placeholder"; //geoLoc.getCity();
 
-                statement
-                        .set(DSL.field(DSL.name("country")), country)
-                        .set(DSL.field(DSL.name("stateprov")), stateProv)
-                        .set(DSL.field(DSL.name("city")), city);
+            statement
+                    .set(DSL.field(DSL.name("country")), country)
+                    .set(DSL.field(DSL.name("stateprov")), stateProv)
+                    .set(DSL.field(DSL.name("city")), city);
 
-            } catch (IOException e) {
-                logger.error("Could not resolve geo-location for {}", address, e);
-            }
+            //} catch (IOException e) {
+            //    logger.error("Could not resolve geo-location for {}", address, e);
+            //}
 
             int affected = statement.execute();
             logger.info("Complete - {} rows affected", affected);
@@ -222,20 +223,21 @@ public final class JooqDatabaseService implements DatabaseService {
                     .set(DSL.field(DSL.name("active")), active)
                     .set(DSL.field(DSL.name("modtime")), DSL.defaultValue(Timestamp.class));
 
-            try {
-                GeoLocation geoLoc = geoService.resolve(address);
-                String country = geoLoc.getCountry();
-                String stateProv = geoLoc.getStateOrProvince();
-                String city = geoLoc.getCity();
+            //try {
+            // TODO: Disabled as either the API changed or our key expired (db-ip is a paid service now)
+            //GeoLocation geoLoc = geoService.resolve(address);
+            String country = "placeholder"; //geoLoc.getCountry();
+            String stateProv = "placeholder"; //geoLoc.getStateOrProvince();
+            String city = "placeholder"; //geoLoc.getCity();
 
-                statement
-                        .set(DSL.field(DSL.name("country")), country)
-                        .set(DSL.field(DSL.name("stateprov")), stateProv)
-                        .set(DSL.field(DSL.name("city")), city);
+            statement
+                    .set(DSL.field(DSL.name("country")), country)
+                    .set(DSL.field(DSL.name("stateprov")), stateProv)
+                    .set(DSL.field(DSL.name("city")), city);
 
-            } catch (IOException e) {
-                logger.error("Could not resolve geo-location for {}", address, e);
-            }
+            //} catch (IOException e) {
+            //    logger.error("Could not resolve geo-location for {}", address, e);
+            //}
 
             Field<Object> addressField = DSL.field(DSL.name("address"));
             Field<Object> portField = DSL.field(DSL.name("port"));

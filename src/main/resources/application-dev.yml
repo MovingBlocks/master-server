@@ -18,6 +18,8 @@ datasources:
 
 meta-server:
   cache.folder: "./cache"
+  dbip.api.key: "disabled"   # DB IP is broken for now
+  edit.secret: "foo"    # Simple for local dev
   table.name: "servers"
   module:
     metadataFileNames:
@@ -28,4 +30,3 @@ meta-server:
         repo-name: virtual-repo-live
         group: org/terasology/modules
         cache-folder: cache
-
