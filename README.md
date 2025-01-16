@@ -11,6 +11,7 @@ Features
 -------------
 * Save and provide information about Terasology modules
 * Receive and provide information about Terasology servers (Looking for game)
+  * To edit server entries you need a password - see `Jenkinsfile` and `k8s/secrets.yaml` to see one way it is set up, locally you can set it via env var `META_SERVER_EDIT_SECRET`  
 * Using https://db-ip.com/ for providing additional info about servers (disabled until API issue figured out)
 * Use PostgresDB via Jooq for persistence
 * Use Micronaut for core Frameworks
@@ -63,18 +64,6 @@ Content-Type: application/json
 }
 ```
 
-# TODO
-
-Since this is an explicit service defined atop the template the templatey bits can be torn out
-
-* APP_URL in the k8s along with updating it every time the Jenkinsfile runs
-* Adjusting the target URL back to meta.terasology.io and a good preview/test pattern
-* Overhauling the readme, naturally
-* Server _removal_ doesn't work, some content type mismatch issue
-* The unit tests extending BaseTests seem to be pulling real jar files from Artifactory, not the mocked test resources (?!?)
-* Go dig out remainder that was tossed out of build.gradle (codemetrics / quality etc)
-* Set the edit secret from a secret text credential in Jenkins as an env var in the pod? For live. Dev can be hard coded. Test? 
-
 ## Behind the scenes
 
 Some more gory details about how this template was put together
@@ -95,33 +84,13 @@ By default the `application.yml` from `src/main/resources` is loaded, but you ca
 
 * `export MICRONAUT_ENVIRONMENTS=dev` on Linux/MacOS
 * `set MICRONAUT_ENVIRONMENTS=dev` on Windows
-* `$env:MICRONAUT_ENVIRONMENTS="dev"` in PowerShell
+* `$env:MICRONAUT_ENVIRONMENTS="dev"` in PowerShell (the quotes are important)
 
 ### Container Registry
 
-The goal is to allow several different registries to work, with minimal effort to go nicely along with the no-nonsense Jib setup.
+The template for this project could support different registries, for publishing Docker images for this particular application we'll just use Google Artifact Registry
 
-### Google Container Registry
-
-[GCR](https://cloud.google.com/container-registry/docs/) is admittedly deprecated in favor of Google's newer [Artifact Registry](https://cloud.google.com/artifact-registry/docs), but plenty of older guides and apps still use it. Converting from GCR to AR should be minimal when the basics work.
-
-First you need to enable its API on your GCP project like other features. Take a look at the basic config and make sure it is set up to match your needs and comfort level.
-
-To get a credential to work with GCR you need to make a [service account](https://console.cloud.google.com/iam-admin/serviceaccounts) (IAM - Service Accounts in [GCP](https://console.cloud.google.com/)) with the Storage Admin role.
-
-After you have a suitable service account you need a JSON file representing the key and its details to use within Jenkins (or elsewhere). This can be created in the UI or via CLI, example used for this repo:
-
-`gcloud iam service-accounts keys create mykey --iam-account=gcr-service-user@teralivekubernetes.iam.gserviceaccount.com`
-
-The `mykey` parameter becomes the json file written to disk in the active directory. Submit it as a Secret File credential in Jenkins and it'll be usable as within the `Jenkinsfile` in this repo, referred to by its credential id
-
-#### Google Artifact Registry
-
-This is much like GCR, with different values for the registry URL and the service account. The authentication takes a little more handling, see `build.gradle` for details
-
-#### Nexus Repository
-
-This is a more generic repository manager that can be used for many things, including Docker images. The setup is a bit more involved than GCR, but it is a good option for self-hosted solutions. Again see `build.gradle` for the exact setup there.
+See https://github.com/MovingBlocks/Logistics for initial infra setup, this project will assume everything is ready already. See `build.gradle` and the `Jenkinsfile` for local technical details.
 
 ## Micronaut 3.10.1 Documentation
 
@@ -151,3 +120,14 @@ License
 -------------
 
 This software is licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
+
+# TODO
+
+Since this is an explicit service defined atop the template the templatey bits can be torn out
+
+* APP_URL in the k8s along with updating it every time the Jenkinsfile runs (unless we use a multi-env pattern for testing)
+* Adjusting the target URL back to meta.terasology.io and a good preview/test pattern
+* Server _removal_ doesn't work, some content type mismatch issue
+* The unit tests extending BaseTests seem to be pulling real jar files from Artifactory, not the mocked test resources (?!?)
+* Go dig out remainder that was tossed out of build.gradle (codemetrics / quality etc)
+* Set the edit secret from a secret text credential in Jenkins as an env var in the pod? For live. Dev can be hard coded. Test? 

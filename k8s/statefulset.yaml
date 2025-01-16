@@ -17,4 +17,9 @@ spec:
           image: IMAGE_PATH
           ports:
             - containerPort: 8080
-
+          env:
+            - name: META_SERVER_EDIT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: meta-server-secrets
+                  key: SERVER_EDIT_SECRET

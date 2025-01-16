@@ -14,9 +14,7 @@ applicationName = "meta-server"
 group = 'org.terasology.web'
 
 ext {
-    //imagePath = "gcr.io/${gcpProjectName}/${applicationName}:${version}"                                  // GCR
-    //imagePath = "docker.terasology.io/repository/docker-nexus/${applicationName}:${version}"              // Nexus
-    imagePath = "us-east1-docker.pkg.dev/${gcpProjectName}/test-docker/${applicationName}:${version}"       // GAR
+    imagePath = "us-east1-docker.pkg.dev/${gcpProjectName}/test-docker/${applicationName}:${version}" // GCP Artifact Registry
 }
 
 repositories {
@@ -80,23 +78,10 @@ micronaut {
 
 task runDocker(type: Exec) {
     dependsOn 'jibDockerBuild'
-
-    // GCP variant that'll use an image published (and public) on the Google Container Registry
-    //commandLine 'docker', 'run', '--env', 'MICRONAUT_ENVIRONMENTS=dev', '-p', '8080:8080', "gcr.io/$gcpProjectName/$applicationName:$version"
-
-    // Local variant
     commandLine 'docker', 'run', '--env', 'MICRONAUT_ENVIRONMENTS=dev', '-p', '8080:8080', "$applicationName:$version"
 }
 
-// If needed - can adjust the origin image and set a target location for automated publishing
 jib {
-    //from.image = 'adoptopenjdk:11-jre-hotspot'
-
-    // This needs auth via `gcloud auth configure-docker` locally or something else in CI. Hardcoded GCP project name.
-    //to.image = "$imagePath"
-    // `./gradlew jib` will then both build and publish the image
-
-    // Alternatives with auth
     to {
         image = "$imagePath"
 
@@ -119,15 +104,7 @@ jib {
                 return keyFile.text
             })
         }
-
-        /* Nexus way
-        auth {
-            username = System.getenv('NEXUS_USERNAME') ?: 'unset'
-            password = System.getenv('NEXUS_PASSWORD') ?: 'unset'
-        }
-        */
     }
-    // Interesting part could be templates with _dynamic_ pick of container registry
 }
 
 // Does text manipulation to prepare k8s YAML files for deployment - should happen in a CD style context with no Git updates
