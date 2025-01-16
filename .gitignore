@@ -1,13 +1,21 @@
 /src/main/java/org/terasology/web/version/
 
-/build/
+Thumbs.db
+.DS_Store
 .gradle
-
-/logs/
-
-# eclipse
-/.classpath
-/.project
-/.settings/
+build/
+target/
+out/
+.micronaut/
+.idea
+*.iml
+*.ipr
+*.iws
+.project
+.settings
+.classpath
+.factorypath
+.vscode
 /bin/
 /cache/
+/logs/

@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: meta-server
+spec:
+  serviceName: meta-server
+  selector:
+    matchLabels:
+      app: meta-server
+  template:
+    metadata:
+      labels:
+        app: meta-server
+    spec:
+      containers:
+        - name: meta-server
+          image: IMAGE_PATH
+          ports:
+            - containerPort: 8080
+
