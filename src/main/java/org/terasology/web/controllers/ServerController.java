@@ -112,7 +112,7 @@ public class ServerController {
                     .put("message", response.getMessage())
                     .put("version", VersionInfo.getVersion())
                     .build();
-            return new ModelAndView<>("list", dataModel);
+            return new ModelAndView<>("server-list", dataModel);
         } else {
             ImmutableMap<Object, Object> dataModel = ImmutableMap.builder()
                     .put("name", serverForm.getName())
@@ -138,7 +138,7 @@ public class ServerController {
                     .put("message", response.getMessage())
                     .put("version", VersionInfo.getVersion())
                     .build();
-            return new ModelAndView<>("list", dataModel);
+            return new ModelAndView<>("server-list", dataModel);
         } else {
             ImmutableMap<Object, Object> dataModel = ImmutableMap.builder()
                     .put("name", serverForm.getName())
@@ -164,7 +164,7 @@ public class ServerController {
                     .put("message", response.getMessage())
                     .put("version", VersionInfo.getVersion())
                     .build();
-            return new ModelAndView<>("list", dataModel);
+            return new ModelAndView<>("server-list", dataModel);
         } else {
             ImmutableMap<Object, Object> dataModel = ImmutableMap.builder()
                     .put("name", serverForm.getName())
