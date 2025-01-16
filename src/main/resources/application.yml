@@ -22,7 +22,7 @@ meta-server:
       - module.json
       - module.txt
     repos:
-      - url: http://artifactory.terasology.org/artifactory
+      - url: https://artifactory.terasology.io/artifactory
         repo-name: virtual-repo-live
         group: org/terasology/modules
         cache-folder: cache

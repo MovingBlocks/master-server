@@ -29,7 +29,7 @@ More precisely, this instance serves the following data sets in JSON format.
     "dependencies": [],
     "requiredPermissions": [],
     "lastUpdated": "2015-06-08T05:39:40.811+02:00",
-    "downloadUri": "http://artifactory.terasology.org/artifactory/...",
+    "downloadUri": "https//artifactory.terasology.io/artifactory/...",
     "artifactSize": 1337
   },
   ...
