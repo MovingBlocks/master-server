@@ -6,7 +6,7 @@ pipeline {
 
     // Use a java11 agent globally as we're mostly doing Java stuff
     agent {
-        label 'java11'
+        label 'light-java-11'
     }
 
     stages {
